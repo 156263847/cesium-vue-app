@@ -46,6 +46,24 @@ function writeCache(bbox, data) {
 }
 
 /**
+ * 读取本地建筑快照（public/data/buildings-osm.json）
+ * ------------------------------------------------------------------
+ * 作用：离线 / 内网 / Overpass 不可达时的一级数据源。文件由
+ *       `node scripts/fetch-buildings.mjs` 生成，契约与 fetchOsmBuildings 完全一致，
+ *       所以调用方拿到的永远是同一份 { ring, tags } 数组。
+ * 为什么要有它：现场演示最怕网络抽风；本地文件是 0 请求、0 等待、断网可用。
+ * @param {string} url 默认走 Vite public 目录下的静态文件
+ * @returns {Promise<Array<{ring: number[][], tags: object}>>}
+ */
+export async function fetchLocalBuildings(url = '/data/buildings-osm.json') {
+  const res = await fetch(url, { cache: 'no-cache' })
+  if (!res.ok) throw new Error(`本地建筑数据 HTTP ${res.status} @ ${url}`)
+  const data = await res.json()
+  if (!Array.isArray(data) || !data.length) throw new Error('本地建筑数据为空')
+  return data
+}
+
+/**
  * 拉取 bbox 内全部建筑轮廓（带缓存）
  * @param {number[]} bbox [南, 西, 北, 东]（Overpass 官方顺序：south, west, north, east）
  * @param {object} opts timeoutMs 单镜像超时，useCache 命中缓存时直接返回
@@ -95,8 +113,7 @@ export async function fetchOsmBuildings(bbox, { timeoutMs = 30000, useCache = tr
   throw lastError || new Error('所有 Overpass 镜像均不可用')
 }
 
-/** 解析 Overpass JSON → 建筑环数组（只取封闭环，忽略太小与退化碎块） */
-function parseOsmResponse(json) {
+/** 解析 Overpass JSON → 建筑环数组（只取封闭环，忽略太小与退化碎块） */function parseOsmResponse(json) {
   const out = []
   const elements = (json && json.elements) || []
 

@@ -40,7 +40,9 @@ export function createViewer(container) {
   scene.globe.showGroundAtmosphere = true
   scene.skyAtmosphere.hueShift = -0.15
   scene.fog.enabled = true
-  scene.fog.density = 0.00018
+  // 0.00018 是按 1.2km 园区视角调的；城区俯瞰高度 4km 时雾因子会到 0.53，
+  // 远景整片发灰。降到 0.00006 后同高度雾因子约 0.22，既有纵深感又不糊。
+  scene.fog.density = 0.00006
   scene.highDynamicRange = true
 
   // 白模不需要地形遮挡；关掉可省 20~40% 的深度计算

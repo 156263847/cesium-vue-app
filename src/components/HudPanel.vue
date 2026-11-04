@@ -25,7 +25,7 @@
             <span class="v">{{ sim.fps }}</span>
           </div>
           <div class="metric">
-            <span class="k">实体数量</span>
+            <span class="k">建筑数量</span>
             <span class="v">{{ sim.entityCount }}</span>
           </div>
           <div class="metric">

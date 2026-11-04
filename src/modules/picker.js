@@ -17,18 +17,18 @@ export function createPicker(viewer, { city, onHover, onSelect }) {
 
   /**
    * 拾取结果三态：
-   *   Entity  → 命中了某栋建筑
+   *   record  → 命中了某栋建筑（合批后 id 挂的是 record，不是 Entity）
    *   null    → 命中了别的东西 / 空白
-   *   undefined → 命中的是悬停标签本身，应忽略（否则会闪）
+   *   undefined → 命中的是高亮 overlay 或悬停标签本身，应忽略（否则会闪）
    */
   function pickBuilding(position) {
     const picked = viewer.scene.pick(position)
     if (!Cesium.defined(picked) || !picked.id) return null
 
-    const entity = picked.id
-    if (entity === city.hoverLabelEntity) return undefined
-    if (!city.isBuilding(entity)) return null
-    return entity
+    const id = picked.id
+    if (city.isOverlay(id)) return undefined
+    if (!city.isBuilding(id)) return null
+    return id
   }
 
   handler.setInputAction((movement) => {

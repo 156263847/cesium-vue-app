@@ -47,13 +47,18 @@ let cleanupFns = []
 async function loadCity(city) {
   try {
     const count = await city.buildFromOsm({ bbox: OSM_BBOX })
-    sim.setDataSource(`OSM 真实建筑轮廓 · ${count} 栋`)
+    // 组件可能已在加载期间卸载，别往已销毁的场景里写状态
+    if (!runtime.viewer) return
+    if (!count) throw new Error('数据源返回 0 栋建筑')
+    const label = city.dataSource === 'local' ? '本地 OSM 快照' : 'OSM 真实建筑轮廓'
+    sim.setDataSource(`${label} · ${count} 栋`)
     alarms.push(`已加载 ${count} 栋真实建筑（数据 © OpenStreetMap 贡献者）`, 'info')
   } catch (e) {
-    console.warn('[city] OSM 加载失败，降级为程序生成：', e)
+    console.warn('[city] 建筑数据加载失败，降级为程序生成：', e)
+    if (!runtime.viewer) return
     const count = city.build()
     sim.setDataSource(`程序生成 · ${count} 栋`)
-    alarms.push('OSM 数据拉取失败，已切换为程序生成白模', 'danger')
+    alarms.push('建筑数据拉取失败，已切换为程序生成白模', 'danger')
   }
 }
 
@@ -121,7 +126,8 @@ onMounted(() => {
     const now = performance.now()
     if (now - last >= 500) {
       sim.setFps(Math.round((frames * 1000) / (now - last)))
-      sim.setEntityCount(viewer.entities.values.length)
+      // 白模已合批，viewer.entities 只剩少量交互实体，指标要取建筑登记数
+      sim.setEntityCount(city.count)
       frames = 0
       last = now
     }
