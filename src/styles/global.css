@@ -1,0 +1,92 @@
+/**
+ * 全局样式与设计令牌
+ * ------------------------------------------------------------------
+ * 作用：定义整个应用的暗色主题、CSS 变量、HUD 面板基础样式。
+ * 约定：所有颜色只能从下面的变量取，组件里不允许出现硬编码色值，
+ *       保证"全站统一色系"这一诉求在任何时候都不被破坏。
+ */
+
+:root {
+  /* ---- 背景与容器 ---- */
+  --bg: #0b1118;
+  --panel: rgba(13, 22, 32, 0.86);
+  --panel-line: rgba(70, 200, 215, 0.22);
+
+  /* ---- 唯一主题色（青）及其衍生 ---- */
+  --c-primary: #35d0da;
+  --c-primary-weak: rgba(53, 208, 218, 0.12);
+  --c-primary-mid: rgba(53, 208, 218, 0.28);
+
+  /* ---- 建筑白模三态：常态白 / 悬停浅青 / 选中主题色 ---- */
+  --c-model: #ffffff;
+  --c-model-hover: #d4f6f8;
+  --c-model-selected: #35d0da;
+  --c-model-edge: rgba(150, 190, 205, 0.75);
+
+  /* ---- 语义色：只用于报警，不参与装饰 ---- */
+  --c-danger: #ff6b5e;
+
+  /* ---- 文字 ---- */
+  --text: #d8e6ee;
+  --text-muted: #7b93a3;
+
+  --radius: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 13px;
+}
+
+/* Cesium 画布容器：铺满，且必须显式定位，否则 Viewer 尺寸计算会出错 */
+#cesiumContainer {
+  position: absolute;
+  inset: 0;
+}
+
+/* 隐藏 Cesium 默认版权条；正式项目请换成自定义 credit 容器并保留署名 */
+.cesium-viewer-bottom {
+  display: none !important;
+}
+
+/* HUD 面板通用外观：所有浮层都复用这套，避免各组件各写一份 */
+.hud {
+  position: absolute;
+  background: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+/* 统一按钮外观 */
+.hud button,
+button.btn {
+  background: var(--c-primary-weak);
+  color: var(--c-primary);
+  border: 1px solid var(--panel-line);
+  padding: 6px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.18s ease;
+}
+
+.hud button:hover,
+button.btn:hover {
+  background: var(--c-primary-mid);
+}
