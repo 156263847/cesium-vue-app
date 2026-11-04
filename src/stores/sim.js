@@ -16,7 +16,9 @@ export const useSimStore = defineStore('sim', {
     fps: 0,
     entityCount: 0,
     insideFence: true,
-    alarmCount: 0
+    alarmCount: 0,
+    /** 数据来源描述，如 "OSM 真实轮廓 · 612 栋"，由 MapView 装配后写入 */
+    dataSource: ''
   }),
 
   getters: {
@@ -38,6 +40,9 @@ export const useSimStore = defineStore('sim', {
     },
     setInsideFence(v) {
       this.insideFence = v
+    },
+    setDataSource(v) {
+      this.dataSource = v
     },
     incAlarm() {
       this.alarmCount += 1

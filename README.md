@@ -36,8 +36,9 @@ src/
 │  ├─ viewer.js             # Viewer 单例 + 入场运镜 + resize 监听
 │  ├─ layers.js             # 底图 / 地形 管理（esri / osm / gaode）
 │  └─ coordinate.js         # 坐标转换、射线法、Catmull-Rom 插值
+│  └─ overpass.js           # Overpass API：拉取 OSM 真实建筑轮廓（多镜像+缓存）
 ├─ modules/                 # 业务模块，统一 { create → destroy } 工厂形态
-│  ├─ cityBase.js           # 白色建筑体块 + 唯一编码 + 三态配色
+│  ├─ cityBase.js           # 建筑白模：OSM 真实轮廓优先 / 程序生成降级 + 编码 + 三态配色
 │  ├─ picker.js             # 鼠标拾取：悬停高亮 / 点击选中
 │  ├─ fence.js              # 电子围栏：几何 + 视觉状态
 │  ├─ track.js              # 轨迹回放：路径 + 车辆 + 逐帧推进
@@ -228,7 +229,30 @@ const scale = Math.min(innerWidth / 1920, innerHeight / 1080)
 
 ---
 
+## 真实建筑数据（OSM）
+
+启动时优先从 Overpass API 拉取 `config/scene.js` 里 `OSM_BBOX` 范围的真实建筑
+轮廓，失败自动降级为程序生成白模，两条路径走同一个 `addBuilding()` 入口，
+编码/拾取/弹窗/主题色完全无感知数据来源。
+
+```
+MapView.loadCity()
+  ├─ city.buildFromOsm({ bbox })   ← overpass.js：kumi → mail.ru → de 三镜像
+  │                                  成功后写入 localStorage 缓存（7 天）
+  └─ catch → city.build()          ← 程序生成网格体块，日志与面板均有提示
+```
+
+- **高度补全**：中国区 OSM 大量缺高度，按 `height` → `building:levels×3.2`
+  → 类型启发式（住宅/商办/厂房）→ 中心区加成 四级递进
+- **过滤**：面积 < 30㎡（车棚等）与巡检路线避让范围内的建筑不加载
+- **许可**：OSM 数据为 ODbL，商用必须在页面上展示
+  "© OpenStreetMap contributors"（当前通过告警日志展示了一条，正式项目
+  请放到页脚常驻）
+- **限流**：Overpass 是公益服务，别高频刷新；缓存命中后零网络请求
+- 换城市：改 `config/scene.js` 的 `CENTER` 即可，`OSM_BBOX` 自动联动
+
 ## 坐标系提醒
+
 
 全链路约定 **WGS84**。
 

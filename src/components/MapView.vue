@@ -21,7 +21,7 @@ import { createFence } from '@/modules/fence'
 import { createTrack } from '@/modules/track'
 import { createAlarmWatch } from '@/modules/alarm'
 import { createPicker } from '@/modules/picker'
-import { BASE_LAYER, FENCE_RING, ROUTE } from '@/config/scene'
+import { BASE_LAYER, FENCE_RING, ROUTE, OSM_BBOX } from '@/config/scene'
 import { runtime } from '@/runtime'
 import { useSimStore } from '@/stores/sim'
 import { useAlarmStore } from '@/stores/alarm'
@@ -40,6 +40,23 @@ const ui = useUiStore()
 /** 卸载时要执行的清理函数，顺序入栈、顺序出栈 */
 let cleanupFns = []
 
+/**
+ * 异步加载城市数据：OSM 真实轮廓优先，失败降级程序生成。
+ * 两条路径走 cityBase 内部同一个 addBuilding 入口，下游零感知。
+ */
+async function loadCity(city) {
+  try {
+    const count = await city.buildFromOsm({ bbox: OSM_BBOX })
+    sim.setDataSource(`OSM 真实建筑轮廓 · ${count} 栋`)
+    alarms.push(`已加载 ${count} 栋真实建筑（数据 © OpenStreetMap 贡献者）`, 'info')
+  } catch (e) {
+    console.warn('[city] OSM 加载失败，降级为程序生成：', e)
+    const count = city.build()
+    sim.setDataSource(`程序生成 · ${count} 栋`)
+    alarms.push('OSM 数据拉取失败，已切换为程序生成白模', 'danger')
+  }
+}
+
 onMounted(() => {
   const viewer = createViewer(containerRef.value)
   runtime.viewer = viewer
@@ -47,10 +64,13 @@ onMounted(() => {
   // 1. 底图
   const baseLayer = addBaseLayer(viewer, BASE_LAYER)
 
-  // 2. 城市白模（每栋带唯一编码，支持悬停/选中）
+  // 2. 城市白模：优先 OSM 真实建筑轮廓，失败降级为程序生成。
+  //    注意 loadCity 是异步的：拾取/围栏/轨迹都不依赖建筑数据，
+  //    所以不阻塞后面的装配，加载完成前场景只是暂时没有楼。
   const city = createCityBase(viewer, { route: ROUTE })
-  city.build()
   runtime.city = city
+  alarms.push('正在加载 OSM 建筑数据…', 'info')
+  loadCity(city)
 
   // 3. 电子围栏
   const fence = createFence(viewer, FENCE_RING)

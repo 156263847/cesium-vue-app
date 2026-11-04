@@ -84,5 +84,18 @@ export const THEME = {
  */
 export const BUILDING_CODE_PREFIX = 'WG'
 
-// 白模生成网格（列 × 行）
+// 白模生成网格（列 × 行）——仅在 OSM 数据加载失败降级为程序生成时使用
 export const BUILDING_GRID = { cols: 16, rows: 13 }
+
+/**
+ * OSM 真实建筑数据的拉取范围
+ * ------------------------------------------------------------------
+ * 顺序：[南, 西, 北, 东]（Overpass 官方约定）
+ * 默认 = 园区范围外扩约 50 米，换项目时改 CENTER/CAMPUS_SPAN 即可联动
+ */
+export const OSM_BBOX = [
+  CENTER.lat - CAMPUS_SPAN.lat / 2 - 0.0005,
+  CENTER.lon - CAMPUS_SPAN.lon / 2 - 0.0005,
+  CENTER.lat + CAMPUS_SPAN.lat / 2 + 0.0005,
+  CENTER.lon + CAMPUS_SPAN.lon / 2 + 0.0005
+]

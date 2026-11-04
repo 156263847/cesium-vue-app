@@ -15,6 +15,9 @@
     <div class="body">
       <div class="body-inner">
         <p class="sub">车辆定位 · 电子围栏 · 建筑编码</p>
+        <p v-if="sim.dataSource" class="src">
+          <span class="src-dot"></span>{{ sim.dataSource }}
+        </p>
 
         <div class="metrics">
           <div class="metric">
@@ -256,6 +259,24 @@ function onReset() {
   margin: 4px 0 0;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+/* 数据来源行：加载 OSM 期间为空，不占位 */
+.src {
+  margin: 5px 0 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.src-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  flex: 0 0 auto;
 }
 
 /* ---------- 指标 ---------- */
