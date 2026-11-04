@@ -120,11 +120,8 @@ function parseOsmResponse(json) {
     }
     if (ring.length < 4) continue // 至少 4 点才可能构成面
 
-    // Overpass 返回的环通常已闭合，保险起见强制闭合
-    const first = ring[0]
-    const last = ring[ring.length - 1]
-    if (first[0] !== last[0] || first[1] !== last[1]) ring.push([first[0], first[1]])
-
+    // 注意：不在这里闭合环。GeoJSON/OSM 的环规范上是闭合的，但 Cesium 的
+    // 三角化器（earcut）要求首尾不重复，闭合交给 addBuilding 统一剥离。
     out.push({ ring, tags: el.tags || {} })
   }
   return out

@@ -112,12 +112,13 @@ export function createCityBase(viewer, { route = [], prefix = BUILDING_CODE_PREF
     })
   }
 
-  /** 鞋带公式求多边形面积（平方米，经纬度先转米） */
+  /** 鞋带公式求多边形面积（平方米，经纬度先转米；末点自动回绕到首点） */
   function ringArea(ring) {
     let sum = 0
-    for (let i = 0; i < ring.length - 1; i++) {
+    const n = ring.length
+    for (let i = 0; i < n; i++) {
       const [x1, y1] = ring[i]
-      const [x2, y2] = ring[i + 1]
+      const [x2, y2] = ring[(i + 1) % n] // 末点回绕，环不闭合也能算
       sum += x1 * M_PER_DEG_LON * (y2 * M_PER_DEG_LAT) - x2 * M_PER_DEG_LON * (y1 * M_PER_DEG_LAT)
     }
     return Math.abs(sum) / 2
@@ -182,8 +183,20 @@ export function createCityBase(viewer, { route = [], prefix = BUILDING_CODE_PREF
    * @param {string} code 唯一编码
    */
   function addBuilding({ ring, height, name, code }) {
+    // 关键：Cesium 的三角化器（earcut）要求环不闭合——
+    // 首尾重复点会产生零长度边，三角化失败，整个面直接不渲染。
+    // GeoJSON/OSM 的环按规范是闭合的，这里统一剥掉闭合点兜底。
+    const pts = ring.slice()
+    if (pts.length > 3) {
+      const first = pts[0]
+      const last = pts[pts.length - 1]
+      if (Math.abs(first[0] - last[0]) < 1e-9 && Math.abs(first[1] - last[1]) < 1e-9) {
+        pts.pop()
+      }
+    }
+
     const flat = []
-    ring.forEach(([lon, lat]) => flat.push(lon, lat))
+    pts.forEach(([lon, lat]) => flat.push(lon, lat))
 
     const area = Math.round(ringArea(ring))
     const floors = Math.max(1, Math.round(height / 3.6))
@@ -300,8 +313,7 @@ export function createCityBase(viewer, { route = [], prefix = BUILDING_CODE_PREF
             [bx, by],
             [bx + w, by],
             [bx + w, by + h],
-            [bx, by + h],
-            [bx, by]
+            [bx, by + h]
           ],
           height,
           name: `${rowLetter}${c + 1} 号楼`,

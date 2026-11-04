@@ -251,6 +251,37 @@ MapView.loadCity()
 - **限流**：Overpass 是公益服务，别高频刷新；缓存命中后零网络请求
 - 换城市：改 `config/scene.js` 的 `CENTER` 即可，`OSM_BBOX` 自动联动
 
+## 已知问题（排查中，2026-11-04）
+
+### 建筑多边形不显示
+
+**现象**：OSM 数据能正常加载（面板显示"OSM 真实建筑轮廓 · 134 栋"，实体数正确），
+围栏、路线、车辆、告警都正常，但**建筑体块在画面上看不到**。
+
+**已排除 / 已修复**：
+
+- ✅ 环首尾重复点。Cesium 的三角化器（earcut）要求环**不闭合**，首尾重复点会
+  产生零长度边导致面不渲染。GeoJSON/OSM 的环按规范是闭合的，重构时又多加了一次，
+  已在 `addBuilding()` 统一剥离闭合点、`overpass.js` 不再强制闭合。修复后
+  **围栏恢复正常渲染**（围栏环本来就不闭合），但建筑仍未出现。
+- ✅ 坐标错误。`fromDegreesArray` 的 lon/lat 顺序、WGS84 链路均正确，
+  建筑记录里的 `center` 坐标落在围栏范围内。
+- ✅ 数据为空。`entityCount` 与 `records.length` 对得上，实体确实加进了场景。
+
+**待排查方向（下次继续）**：
+
+1. OSM 环的自交/尖刺：earcut 对自交多边形会失败，可先用 `PolygonPipeline`
+   的简化/去重预处理，或对失败的单栋做凸包降级
+2. `polygon.outline: true` 在 Windows/ANGLE 下不受支持（这是 Cesium 的已知限制），
+   虽然只影响描边，但可试关闭 outline 观察是否连带影响面渲染
+3. 单栋最小复现：只加载 1 栋、4 点方环，逐步加复杂度定位触发条件
+4. 对照实验：用同一份数据分别走 `entity.polygon` 和 `Primitive`（GeometryInstance）
+   两种渲染路径，判断是实体层还是几何层的问题
+
+**临时兜底**：把 `MapView.loadCity()` 里的 `buildFromOsm` 注释掉、直接用
+`city.build()`，程序生成的白模是 4 点矩形环（与本次改动前的正常版本一致），
+可作为排查时的对照基线。
+
 ## 坐标系提醒
 
 
