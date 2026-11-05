@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker build -t cesium-vue-app:1.0.0 .",
+    "docker:up": "docker compose up -d --build",
+    "docker:logs": "docker compose logs -f",
+    "docker:down": "docker compose down"
   },
   "dependencies": {
     "cesium": "^1.147.0",

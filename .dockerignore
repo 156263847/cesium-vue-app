@@ -1,0 +1,21 @@
+# 构建上下文瘦身：这些目录一旦被 COPY . . 带进镜像层，体积会翻倍
+node_modules
+dist
+dist-ssr
+
+# 版本库与编辑器
+.git
+.gitignore
+.vscode
+
+# 文档与维护脚本（只在本地用，不参与前端构建）
+docs
+README.md
+GIT.md
+scripts
+DOCKER.md
+
+# 杂项
+*.log
+*.local
+.DS_Store

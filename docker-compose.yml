@@ -1,0 +1,32 @@
+# ------------------------------------------------------------------
+# 本地一键编排：构建镜像 + 起容器
+#   启动：docker compose up -d --build
+#   看日志：docker compose logs -f
+#   停止：docker compose down
+#   换端口：改 ports 左侧，例如 "9090:80"
+# ------------------------------------------------------------------
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # 换回官方源：NPM_REGISTRY: https://registry.npmjs.org
+        NPM_REGISTRY: https://registry.npmmirror.com
+    image: cesium-vue-app:1.0.0
+    container_name: cesium-vue-app
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    # 静态站点无状态，只读根文件系统能进一步降低被篡改风险
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx
+      - /var/run
